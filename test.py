@@ -3,10 +3,11 @@ from travel_bot import Travel
 
 def main():
     travel_agent = Travel("gemini-2.0-flash", "google-genai", temperature=0)
-    question = "Tôi yêu ẩm thực. Tôi nên đi đâu ở Thái Bình?"
-    # question = "Tôi có thể học toán ở đâu?"
+    question = "Đà Nẵng có bãi biển nào đẹp?"
     response = travel_agent.run(question=question)
+    print("=" * 50)
     print(response["output"])
+    print("=" * 50)
 
 
 if __name__ == "__main__":

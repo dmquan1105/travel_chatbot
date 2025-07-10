@@ -7,6 +7,7 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.schema import AIMessage, HumanMessage
 from prompt import BOT_PROMPT
+from tools.search_travel_info import search_travel_info
 
 
 class Travel:
@@ -31,12 +32,16 @@ class Travel:
             ]
         )
 
+        self.tools = [search_travel_info]
+
         # Create agent from prompt template
-        Agent_calling = create_tool_calling_agent(llm_model, tools=[], prompt=prompt)
+        Agent_calling = create_tool_calling_agent(
+            llm_model, tools=self.tools, prompt=prompt
+        )
 
         self.TravelExecutor = AgentExecutor(
             agent=Agent_calling,
-            tools=[],
+            tools=self.tools,
             verbose=False,
             handle_parsing_errors=True,
         )
