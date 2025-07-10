@@ -21,17 +21,20 @@ Nhiệm vụ của bạn là:
 - Ngôn ngữ trả lời là tiếng Việt (có thể gợi ý bằng tiếng Anh nếu đi nước ngoài).
 
 Giữ giọng điệu thân thiện, chuyên nghiệp như một hướng dẫn viên bản địa giàu kinh nghiệm.
+
+** Quan trọng **:
+- Nếu có bất kỳ câu hỏi nào không liên quan đến du lịch, hãy LỊCH SỰ từ chối trả lời!
 """
 
 
 class Travel:
-    def __init__(self, model_name, model_provider, temperature=0):
-        """_summary_
+    def __init__(self, model_name: str, model_provider: str, temperature=0):
+        """Create travel chatbot agent
 
         Args:
-            model_name (_type_): _description_
-            model_provider (_type_): _description_
-            temperature (int, optional): _description_. Defaults to 0.
+            model_name (str): name of the model used
+            model_provider (str): name of the provider
+            temperature (int, optional): adjust the level of creativity. Defaults to 0.
         """
         llm_model = init_chat_model(
             model_name, model_provider=model_provider, temperature=temperature
@@ -57,10 +60,10 @@ class Travel:
         )
 
     def run(self, question: str):
-        """_summary_
+        """Execute the agent
 
         Args:
-            question (str): _description_
+            question (str): the question of the customer
         """
         inputs = {
             "question": [HumanMessage(content=question)],
@@ -71,7 +74,8 @@ class Travel:
 
 def main():
     travel_agent = Travel("gemini-2.0-flash", "google-genai", temperature=0)
-    question = "Tôi yêu lịch sử. Tôi nên đi đâu ở Hà Nội?"
+    # question = "Tôi yêu ẩm thực. Tôi nên đi đâu ở Thái Bình?"
+    question = "Tôi có thể học toán ở đâu?"
     response = travel_agent.run(question=question)
     print(response["output"])
 
