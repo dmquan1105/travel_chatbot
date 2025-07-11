@@ -18,7 +18,7 @@ pip install dotenv
 pip install langchain-community faiss-cpu
 ```
 
-If you have gpu: replace cpu with gpu.
+If you have a GPU, replace faiss-cpu with faiss-gpu.
 
 ## Setup environment:
 
