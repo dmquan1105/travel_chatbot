@@ -12,6 +12,14 @@ pip install -qU "langchain[google-genai]"
 pip install dotenv
 ```
 
+## Install FAISS (use with langchain):
+
+```sh
+pip install langchain-community faiss-cpu
+```
+
+If you have gpu: replace cpu with gpu.
+
 ## Setup environment:
 
 Create a .env file and put your API key like the .env.example.
