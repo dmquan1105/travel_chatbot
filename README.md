@@ -20,6 +20,13 @@ pip install langchain-community faiss-cpu
 
 If you have a GPU, replace faiss-cpu with faiss-gpu.
 
+## Install all current package:
+
+```sh
+pip install -r requirements.txt
+
+```
+
 ## Setup environment:
 
 Create a .env file and put your API key like the .env.example.
