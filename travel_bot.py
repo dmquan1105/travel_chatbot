@@ -13,6 +13,8 @@ from tools.search_travel_info import search_travel_info
 from langchain.schema import BaseMessage
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.schema.messages import get_buffer_string
+import time
+import google.api_core.exceptions
 
 
 class Travel:
@@ -76,6 +78,15 @@ class Travel:
             else:
                 break
 
+    def safe_invoke(self, inputs, retries=5, delay=2):
+        for i in range(retries):
+            try:
+                return self.TravelExecutor.invoke(inputs)
+            except google.api_core.exceptions.ServiceUnavailable as e:
+                print(f"[Retry {i+1}] Model overloaded. Waiting {delay}s...")
+                time.sleep(delay)
+        raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
+
     def run(self, question: str):
         """Execute the agent
 
@@ -87,7 +98,7 @@ class Travel:
         self.total_tokens += self.llm_model.get_num_tokens(get_buffer_string([new_msg]))
         self.trim_history_to_fit()
 
-        response = self.TravelExecutor.invoke({"question": self.chat_history})
+        response = self.safe_invoke({"question": self.chat_history})
 
         ai_msg = AIMessage(content=response["output"])
         self.chat_history.append(ai_msg)
