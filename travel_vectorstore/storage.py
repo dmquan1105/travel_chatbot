@@ -5,6 +5,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from travel_vectorstore.loader import load_documents_from_jsonl
 from utils.common import singleton
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,6 +16,9 @@ class TravelVectorStorage(object):
         self.vectorstore = None
         self.embedding = HuggingFaceEmbeddings(
             model_name="VoVanPhuc/sup-SimCSE-VietNamese-phobert-base"
+        )
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=300, chunk_overlap=50, separators=["\n\n", "\n", "."]
         )
 
         if reset and os.path.exists(cache):
@@ -40,17 +44,18 @@ class TravelVectorStorage(object):
         else:
             print("Building new FAISS vectorstore from JSONL...")
             docs = load_documents_from_jsonl("data/travel_data.jsonl")
-            self.vectorstore = FAISS.from_documents(docs, self.embedding)
+            split_docs = self.text_splitter.split_documents(docs)
+            self.vectorstore = FAISS.from_documents(split_docs, self.embedding)
             self.vectorstore.save_local(cache)
 
     def search(
-        self, query: str, k: int = 5, location: Optional[str] = None
+        self, query: str, k: int = 10, location: Optional[str] = None
     ) -> List[Document]:
         """Finding relevant travel info, optionally filtered by location.
 
         Args:
             query (str): user query
-            k (int, optional): top-k results. Defaults to 5.
+            k (int, optional): top-k results. Defaults to 10.
             location (Optional[str], optional): Location filter. Defaults to None.
 
         Returns:
