@@ -30,3 +30,20 @@ pip install -r requirements.txt
 ## Setup environment:
 
 Create a .env file and put your API key like the .env.example.
+
+## Open Weather API Key:
+
+- Sign up and create account:
+  https://www.weatherapi.com/
+- Get API key in the API tab.
+- Config WEATHERAPI_KEY in .env file.
+
+## Tavily:
+
+- Get API Key: https://app.tavily.com
+
+- Install:
+
+```sh
+pip install tavily-python
+```

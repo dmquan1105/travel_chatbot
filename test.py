@@ -1,5 +1,4 @@
-from travel_bot import Travel
-from langchain.schema import HumanMessage, AIMessage
+from agents.travel_bot import Travel
 
 
 def main():
@@ -16,9 +15,7 @@ def main():
         response = travel_agent.run(question=user_input)
         print(f"Bot: {response['output']}\n")
 
-        print(
-            f"Lịch sử: {len(travel_agent.chat_history)} lượt | Tokens: {travel_agent.total_tokens}"
-        )
+        print(f"Tokens: {travel_agent.total_tokens}")
         print("-" * 50)
 
 

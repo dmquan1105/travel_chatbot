@@ -19,7 +19,7 @@ def search_travel_info(query: str, location: Optional[str] = None) -> str:
         str: các đề xuất kết quả dựa trên truy vấn
     """
     print("=" * 50)
-    print("Using tool...")
+    print("Using search tool...")
     print("=" * 50)
 
     storage = TravelVectorStorage()

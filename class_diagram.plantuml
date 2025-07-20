@@ -1,0 +1,54 @@
+@startuml Travel bot
+
+' ===============================
+' Travel Vectorstore package
+' ===============================
+package "travel_vectorstore" {
+    class TravelVectorStorage {
+        - vectorstore
+        - embedding
+        - text_splitter
+        - cache_path
+        + search(query: str, k: int = 50, location: Optional[str] = None): List[Document]
+    }
+}
+
+' ===============================
+' Tools package
+' ===============================
+package "tools" {
+    class search_travel_info <<tool>> {
+        + search_travel_info(query: str, location: Optional[str] = None): str
+    }
+}
+
+' ===============================
+' agents package
+' ===============================
+package "agents" {
+    class Travel {
+        - llm_model
+        - max_tokens
+        - total_tokens
+        - chat_history: List[BaseMessage]
+        - tools
+        - TravelExecutor
+        + update_total_tokens()
+        + trim_history_to_fit()
+        + safe_invoke(inputs, retries=5, delay=2)
+        + run(question: str)
+    }
+
+}
+
+' ===============================
+' Relationships
+' ===============================
+
+' Composition: Travel includes tools
+Travel *-- search_travel_info : tool
+
+' Dependency: search_travel_info uses TravelVectorStorage
+search_travel_info ..> TravelVectorStorage : uses
+
+@enduml

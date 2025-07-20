@@ -9,6 +9,7 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.schema import AIMessage, HumanMessage
 from prompt import BOT_PROMPT
 from tools.search_travel_info import search_travel_info
+from tools.get_weather import get_weather
 
 from langchain.schema import BaseMessage
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -22,7 +23,7 @@ class Travel:
         self,
         model_name: str,
         model_provider: str,
-        temperature=0,
+        temperature=0.0,
         max_tokens: int = 4000,
     ):
         """Create travel chatbot agent
@@ -30,7 +31,7 @@ class Travel:
         Args:
             model_name (str): name of the model used
             model_provider (str): name of the provider
-            temperature (int, optional): adjust the level of creativity. Defaults to 0.
+            temperature (float, optional): adjust the level of creativity. Defaults to 0.
             max_tokens (int, optional): maximum token of the context window. Defaults to 4000.
         """
         self.llm_model = init_chat_model(
@@ -49,7 +50,7 @@ class Travel:
         self.max_tokens = max_tokens
         self.total_tokens = 0
         self.chat_history: List[BaseMessage] = []
-        self.tools = [search_travel_info]
+        self.tools = [search_travel_info, get_weather]
 
         # Create agent from prompt template
         Agent_calling = create_tool_calling_agent(
