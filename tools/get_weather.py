@@ -51,7 +51,7 @@ def get_weather(location: str) -> str:
 
 
 def main():
-    result = get_weather.invoke({"location": "Đà Lạt"})
+    result = get_weather.invoke({"location": "Tam Đảo"})
     print(result)
 
 

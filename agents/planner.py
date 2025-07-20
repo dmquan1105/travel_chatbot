@@ -3,12 +3,15 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 import time
 import google.api_core.exceptions
-from base_agent import BaseAgent
+from agents.base_agent import BaseAgent
 from prompt import PLANNER_PROMPT
 from langchain.chat_models import init_chat_model
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.schema import AIMessage, HumanMessage
+import json
+
+# KHÔNG DÙNG TRONG PIPELINE
 
 
 class Planner(BaseAgent):
@@ -46,5 +49,30 @@ class Planner(BaseAgent):
                 time.sleep(delay)
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
-    def run(self, input: str) -> str:
-        pass
+    def run(self, input: str):
+        response = self.safe_invoke({"question": [HumanMessage(content=input)]})
+        try:
+            result = response["output"].strip()
+
+            # Bỏ ```json và ``` nếu có
+            if result.startswith("```json"):
+                result = result[len("```json") :].strip()
+            if result.endswith("```"):
+                result = result[:-3].strip()
+            return json.loads(result)
+        except Exception as e:
+            print("Lỗi parse JSON:", e)
+            return [
+                {"id": "task_1", "description": response["output"], "depends_on": []}
+            ]
+
+
+def main():
+    planner = Planner("gemini-2.0-flash", "google-genai")
+    query = "Lên kế hoạch đi du lịch Đà Nẵng 2 ngày 1 đêm"
+    response = planner.run(query)
+    print(response)
+
+
+if __name__ == "__main__":
+    main()
