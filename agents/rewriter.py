@@ -24,6 +24,7 @@ class Rewriter(BaseAgent):
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", REWRITER_PROMPT),
+                MessagesPlaceholder(variable_name="chat_history"),
                 MessagesPlaceholder(variable_name="question"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
             ]
@@ -32,6 +33,7 @@ class Rewriter(BaseAgent):
         prompt_reflector = ChatPromptTemplate.from_messages(
             [
                 ("system", REWRITE_REFLECTOR_PROMPT),
+                MessagesPlaceholder(variable_name="chat_history"),
                 MessagesPlaceholder(variable_name="question"),
                 MessagesPlaceholder(variable_name="rewrite_result"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
@@ -86,7 +88,6 @@ class Rewriter(BaseAgent):
                     return result
                 except Exception as e:
                     print("Lỗi khi parse output từ reflector, xem lại phản hồi:")
-                    print(result["output"])
                     return {
                         "verdict": "FAIL",
                         "feedback": "Do reflector phản hồi không đúng định dạng, không phải do Rewriter.",
@@ -96,8 +97,11 @@ class Rewriter(BaseAgent):
                 time.sleep(delay)
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
-    def run(self, input: str, max_iterations: int = 5) -> str:
+    def run(
+        self, input: str, chat_history: list = None, max_iterations: int = 5
+    ) -> str:
         feedback = None
+        chat_history = chat_history or []
 
         for i in range(max_iterations):
             print(f"\nRewrite vòng {i+1}:")
@@ -109,13 +113,16 @@ class Rewriter(BaseAgent):
                     HumanMessage(content=f"Phản hồi từ người đánh giá: {feedback}")
                 )
 
-            response = self.safe_invoke({"question": input_message})
+            response = self.safe_invoke(
+                {"question": input_message, "chat_history": chat_history}
+            )
             rewrite_text = response["output"]
             print(f"Câu rewrite: {rewrite_text}")
 
             # Reflect
             reflect_result = self.safe_reflect_invoke(
                 {
+                    "chat_history": chat_history,
                     "question": [HumanMessage(content=input)],
                     "rewrite_result": [AIMessage(content=rewrite_text)],
                 }
@@ -137,8 +144,14 @@ class Rewriter(BaseAgent):
 
 def main():
     rewritter = Rewriter("gemini-2.0-flash", "google-genai")
-    query = "Muốn đi du lịch mà chưa biết đi đâu, gợi ý giúp nhé."
-    response = rewritter.run(query)
+
+    chat_history = [
+        HumanMessage(content="Tớ định đi Đà Lạt hoặc Sapa dịp Tết."),
+        AIMessage(content="Cả hai nơi đều đẹp, nhưng Sapa có thể lạnh hơn."),
+    ]
+    query = "Vậy nếu Đà Lạt đông quá thì sao?"
+
+    response = rewritter.run(query, chat_history=chat_history)
     print(response)
 
 
