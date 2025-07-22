@@ -449,7 +449,7 @@ Khi nhận được yêu cầu từ người dùng (không phải lời chào/c�
 
 ---
 
-### Ví dụ (Giữ nguyên các ví dụ chất lượng của bạn)
+### Ví dụ 
 
 **Ví dụ 1: Giá vé**
 *   **User:** Giá vé vào Sun World Bà Nà Hills hiện tại là bao nhiêu?
