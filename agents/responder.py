@@ -91,8 +91,8 @@ def main():
         HumanMessage(content="Tớ định đi Đà Lạt hoặc Sapa dịp Tết."),
         AIMessage(content="Cả hai nơi đều đẹp, nhưng Sapa có thể lạnh hơn."),
     ]
-    # query = "Xây dựng kế hoạch đi du lịch biển Đà Nẵng 2 ngày 1 đêm với ngân sách 5 triệu đồng, muốn thưởng thức hải sản"
-    query = "Giá vé máy bay đi Đà Nẵng hiện là bao nhiêu?"
+    query = "Xây dựng kế hoạch đi du lịch biển Đà Nẵng 2 ngày 1 đêm với ngân sách 5 triệu đồng, muốn thưởng thức hải sản"
+    # query = "Giá vé máy bay đi Đà Nẵng hiện là bao nhiêu?"
     rsp = responder.run(question=query, chat_history=chat_history)
     print(rsp)
 
