@@ -17,6 +17,9 @@ def web_search(query: str) -> List[Dict[str, str]]:
     Returns:
         List[Dict[str, str]]: A list of search result dictionaries with title, url, and content.
     """
+    print("=" * 50)
+    print("Using web search tool...")
+    print("=" * 50)
     search = TavilySearchResults()
     results = search.run(query)
 
