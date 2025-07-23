@@ -88,11 +88,12 @@ class Responder:
 def main():
     responder = Responder("gemini-2.0-flash", "google-genai")
     chat_history = [
-        HumanMessage(content="Tớ định đi Đà Lạt hoặc Sapa dịp Tết."),
-        AIMessage(content="Cả hai nơi đều đẹp, nhưng Sapa có thể lạnh hơn."),
+        # HumanMessage(content="Tớ định đi Đà Lạt hoặc Sapa dịp Tết."),
+        # AIMessage(content="Cả hai nơi đều đẹp, nhưng Sapa có thể lạnh hơn."),
     ]
-    query = "Xây dựng kế hoạch đi du lịch biển Đà Nẵng 2 ngày 1 đêm với ngân sách 5 triệu đồng, muốn thưởng thức hải sản"
-    # query = "Giá vé máy bay đi Đà Nẵng hiện là bao nhiêu?"
+    # query = "Xây dựng kế hoạch đi du lịch biển Đà Nẵng 2 ngày 1 đêm vào cuối tuần này với ngân sách 5 triệu đồng, muốn thưởng thức hải sản, địa điểm tuỳ chọn, miễn vui là được và số tiền phải nằm trong ngân sách"
+    # query = "Ở miền Bắc có nơi nào thú vị để tham quan?"
+    query = "Giá vé máy bay đi Đà Nẵng từ Hà Nội hiện tại?"
     rsp = responder.run(question=query, chat_history=chat_history)
     print(rsp)
 
