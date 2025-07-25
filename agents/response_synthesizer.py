@@ -3,12 +3,15 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 import time
 import google.api_core.exceptions
-from base_agent import BaseAgent
+from agents.base_agent import BaseAgent
 from prompt import SYNTHESIZER_PROMPT
 from langchain.chat_models import init_chat_model
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.schema import AIMessage, HumanMessage
+import json
+from langchain.schema import BaseMessage
+from typing import List
 
 
 class Synthesizer(BaseAgent):
@@ -21,6 +24,7 @@ class Synthesizer(BaseAgent):
             [
                 ("system", SYNTHESIZER_PROMPT),
                 MessagesPlaceholder(variable_name="question"),
+                MessagesPlaceholder(variable_name="tasks_list"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
             ]
         )
@@ -46,5 +50,70 @@ class Synthesizer(BaseAgent):
                 time.sleep(delay)
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
-    def run(self, input: str) -> str:
-        pass
+    def run(self, original_question: str, completed_tasks: list[dict]) -> str:
+        """
+        Tổng hợp kết quả từ các task đã hoàn thành để trả lời câu hỏi gốc.
+
+        Args:
+            original_question: Câu hỏi gốc của người dùng.
+            completed_tasks: List các dictionary, mỗi dict là một task đã hoàn thành.
+
+        Returns:
+            Câu trả lời cuối cùng đã được tổng hợp.
+        """
+        formatted_tasks = "Dưới đây là kết quả của các tác vụ con đã được thực hiện để trả lời câu hỏi:\n\n"
+        for task in completed_tasks:
+            formatted_tasks += f"--- START TASK ---\n"
+            formatted_tasks += f"ID Task: {task.get('id', 'N/A')}\n"
+            depends_on = task.get("depends_on")
+            if depends_on:
+                formatted_tasks += f"Phụ thuộc vào Task: {', '.join(depends_on)}\n"
+            formatted_tasks += f"Mô tả Task: {task.get('description', 'N/A')}\n"
+            response_str = json.dumps(
+                task.get("response", "Không có kết quả"), indent=2, ensure_ascii=False
+            )
+            formatted_tasks += f"Kết quả Task:\n{response_str}\n"
+            formatted_tasks += f"--- END TASK ---\n\n"
+
+        input_data = {
+            "question": [
+                HumanMessage(
+                    content=f'Câu hỏi gốc cần trả lời là: "{original_question}"'
+                )
+            ],
+            "tasks_list": [HumanMessage(content=formatted_tasks)],
+        }
+
+        result = self.safe_invoke(input_data)
+
+        return result.get(
+            "output", "Rất tiếc, tôi không thể tổng hợp được câu trả lời."
+        )
+
+
+if __name__ == "__main__":
+    synthesizer_agent = Synthesizer(
+        model_name="gemini-2.0-flash", model_provider="google-genai", temperature=0.1
+    )
+
+    question = "Giá cổ phiếu Tesla hôm nay?"
+    tasks = [
+        {
+            "id": "task_1",
+            "description": "Tìm giá cổ phiếu hiện tại của Tesla (TSLA).",
+            "depends_on": [],
+            "response": "Tôi xin lỗi, tôi không thể cung cấp thông tin về giá cổ phiếu. Tôi chỉ có thể cung cấp thông tin liên quan đến du lịch.",
+        },
+    ]
+
+    print(f"Câu hỏi gốc: {question}")
+    print("Dữ liệu đầu vào (kết quả các subtask):")
+    print(json.dumps(tasks, indent=2, ensure_ascii=False))
+
+    final_answer = synthesizer_agent.run(
+        original_question=question, completed_tasks=tasks
+    )
+
+    print("\n--- Câu trả lời tổng hợp cuối cùng ---")
+    print(final_answer)
+    print("=" * 60)

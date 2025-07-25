@@ -10,6 +10,9 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain.schema import AIMessage, HumanMessage
 import json
+from langchain.schema import BaseMessage
+from typing import List
+
 
 # KHÔNG DÙNG TRONG PIPELINE
 
@@ -23,6 +26,7 @@ class Planner(BaseAgent):
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", PLANNER_PROMPT),
+                MessagesPlaceholder(variable_name="chat_history"),
                 MessagesPlaceholder(variable_name="question"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
             ]
@@ -49,8 +53,10 @@ class Planner(BaseAgent):
                 time.sleep(delay)
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
-    def run(self, input: str):
-        response = self.safe_invoke({"question": [HumanMessage(content=input)]})
+    def run(self, query: str, chat_history: List[BaseMessage]):
+        response = self.safe_invoke(
+            {"question": [HumanMessage(content=query)], "chat_history": chat_history}
+        )
         try:
             result = response["output"].strip()
 
@@ -69,8 +75,12 @@ class Planner(BaseAgent):
 
 def main():
     planner = Planner("gemini-2.0-flash", "google-genai")
-    query = "Lên kế hoạch đi du lịch Đà Nẵng 2 ngày 1 đêm"
-    response = planner.run(query)
+    chat_history = [
+        HumanMessage(content="Xin chào"),
+        AIMessage(content="Xin chào, bạn muốn làm gì hôm nay?"),
+    ]
+    query = "Các địa điểm đi du lịch hay ho ở miền Bắc?"
+    response = planner.run(query=query, chat_history=chat_history)
     print(response)
 
 

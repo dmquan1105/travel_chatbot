@@ -49,13 +49,13 @@ class TravelVectorStorage(object):
             self.vectorstore.save_local(cache)
 
     def search(
-        self, query: str, k: int = 50, location: Optional[str] = None
+        self, query: str, k: int = 40, location: Optional[str] = None
     ) -> List[Document]:
         """Finding relevant travel info, optionally filtered by location.
 
         Args:
             query (str): user query
-            k (int, optional): top-k results. Defaults to 10.
+            k (int, optional): top-k results. Defaults to 40.
             location (Optional[str], optional): Location filter. Defaults to None.
 
         Returns:

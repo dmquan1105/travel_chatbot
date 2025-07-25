@@ -12,11 +12,9 @@ from tools.search_travel_info import search_travel_info
 from tools.get_weather import get_weather
 from tools.web_search import web_search
 
-from langchain.schema import BaseMessage
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain.schema.messages import get_buffer_string
 import time
 import google.api_core.exceptions
+import json
 
 
 class Responder:
@@ -32,7 +30,6 @@ class Responder:
             model_name (str): name of the model used
             model_provider (str): name of the provider
             temperature (float, optional): adjust the level of creativity. Defaults to 0.
-            max_tokens (int, optional): maximum token of the context window. Defaults to 4000.
         """
         self.llm_model = init_chat_model(
             model_name, model_provider=model_provider, temperature=temperature
@@ -42,7 +39,6 @@ class Responder:
         prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", RESPONDER_PROMPT),
-                MessagesPlaceholder(variable_name="chat_history"),
                 MessagesPlaceholder(variable_name="question"),
                 MessagesPlaceholder(variable_name="agent_scratchpad"),
             ]
@@ -71,30 +67,42 @@ class Responder:
                 time.sleep(delay)
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
-    def run(self, question: str, chat_history: List[BaseMessage]):
-        """Execute the agent
+    def run(self, query):
+        required_keys = {"id", "description", "depends_on"}
+        if not isinstance(query, dict):
+            raise ValueError("Input 'query' phải là một dictionary.")
+        if not required_keys.issubset(query.keys()):
+            missing = required_keys - set(query.keys())
+            raise ValueError(f"Thiếu trường trong input: {', '.join(missing)}")
 
-        Args:
-            question (str): the question of the customer
-            chat_history (List[BaseMessage]):the chat context
-        """
-        response = self.safe_invoke(
-            {"question": [HumanMessage(content=question)], "chat_history": chat_history}
+        # Trích xuất câu hỏi cốt lõi
+        user_request = query["description"]
+
+        response = self.safe_invoke({"question": [HumanMessage(content=user_request)]})
+
+        agent_text_response = response.get(
+            "output", "Xin lỗi, đã có lỗi xảy ra và tôi không thể tạo phản hồi."
         )
 
-        return response["output"]
+        final_output = {
+            "id": query["id"],
+            "description": query["description"],
+            "depends_on": query["depends_on"],
+            "response": agent_text_response.strip(),
+        }
+
+        return final_output
 
 
 def main():
     responder = Responder("gemini-2.0-flash", "google-genai")
-    chat_history = [
-        # HumanMessage(content="Tớ định đi Đà Lạt hoặc Sapa dịp Tết."),
-        # AIMessage(content="Cả hai nơi đều đẹp, nhưng Sapa có thể lạnh hơn."),
-    ]
-    # query = "Xây dựng kế hoạch đi du lịch biển Đà Nẵng 2 ngày 1 đêm vào cuối tuần này với ngân sách 5 triệu đồng, muốn thưởng thức hải sản, địa điểm tuỳ chọn, miễn vui là được và số tiền phải nằm trong ngân sách"
-    # query = "Ở miền Bắc có nơi nào thú vị để tham quan?"
-    query = "Giá vé máy bay đi Đà Nẵng từ Hà Nội hiện tại?"
-    rsp = responder.run(question=query, chat_history=chat_history)
+    query = {
+        "id": "task_1",
+        "description": "Các di tích lịch sử ở Hà Nội",
+        "depends_on": [],
+    }
+
+    rsp = responder.run(query=query)
     print(rsp)
 
 
