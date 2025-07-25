@@ -100,6 +100,9 @@ class Rewriter(BaseAgent):
     def run(
         self, input: str, chat_history: list = None, max_iterations: int = 5
     ) -> str:
+
+        print("=" * 50 + " REWRITER " + "=" * 50)
+
         feedback = None
         chat_history = chat_history or []
 

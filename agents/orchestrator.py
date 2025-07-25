@@ -14,12 +14,17 @@ from langchain.schema.messages import get_buffer_string
 import time
 import google.api_core.exceptions
 
+from agents.planner import Planner
+from agents.responder import Responder
+from agents.rewriter import Rewriter
+from agents.response_synthesizer import Synthesizer
+
 
 class Orchestrator:
     def __init__(
         self,
-        model_name: str,
-        model_provider: str,
+        model_name: str = "gemini-2.0-flash",
+        model_provider: str = "google-genai",
         temperature=0.0,
         max_tokens: int = 4000,
     ):
@@ -61,6 +66,30 @@ class Orchestrator:
             handle_parsing_errors=True,
         )
 
+        self.rewriter = Rewriter(
+            model_name=model_name,
+            model_provider=model_provider,
+            temperature=temperature,
+        )
+
+        self.planner = Planner(
+            model_name=model_name,
+            model_provider=model_provider,
+            temperature=temperature,
+        )
+
+        self.responder = Responder(
+            model_name=model_name,
+            model_provider=model_provider,
+            temperature=temperature,
+        )
+
+        self.synthesizer = Synthesizer(
+            model_name=model_name,
+            model_provider=model_provider,
+            temperature=temperature,
+        )
+
     def update_total_tokens(self):
         self.total_tokens = self.llm_model.get_num_tokens(
             get_buffer_string(self.chat_history)
@@ -91,4 +120,42 @@ class Orchestrator:
         Args:
             question (str): the question of the customer
         """
-        pass
+        print("=" * 50 + " ORCHESTRATOR " + "=" * 50)
+
+        new_msg = HumanMessage(content=question)
+        self.chat_history.append(new_msg)
+        self.total_tokens += self.llm_model.get_num_tokens(get_buffer_string([new_msg]))
+        self.trim_history_to_fit()
+
+        rewrite_question = self.rewriter.run(
+            input=question, chat_history=self.chat_history
+        )
+
+        tasks = self.planner.run(query=rewrite_question, chat_history=self.chat_history)
+
+        print(tasks)
+
+        responses = []
+
+        for task in tasks:
+            response = self.responder.run(task)
+            responses.append(response)
+
+        print(responses)
+
+        final_answer = self.synthesizer.run(rewrite_question, responses)
+
+        ai_msg = AIMessage(content=final_answer)
+        self.chat_history.append(ai_msg)
+        self.total_tokens += self.llm_model.get_num_tokens(get_buffer_string([ai_msg]))
+
+        return final_answer
+
+
+if __name__ == "__main__":
+    master = Orchestrator()
+    question = (
+        "Lên kế hoạch đi Đà Nẵng 2 ngày 1 đêm với ngân sách 10 triệu, đi từ Hà Nội"
+    )
+    answer = master.run(question)
+    print(answer)

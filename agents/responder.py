@@ -68,6 +68,8 @@ class Responder:
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
     def run(self, query):
+        print("=" * 50 + " RESPONDER " + "=" * 50)
+
         required_keys = {"id", "description", "depends_on"}
         if not isinstance(query, dict):
             raise ValueError("Input 'query' phải là một dictionary.")

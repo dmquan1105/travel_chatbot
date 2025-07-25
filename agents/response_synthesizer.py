@@ -50,17 +50,19 @@ class Synthesizer(BaseAgent):
                 time.sleep(delay)
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
-    def run(self, original_question: str, completed_tasks: list[dict]) -> str:
+    def run(self, question: str, completed_tasks: list[dict]) -> str:
         """
         Tổng hợp kết quả từ các task đã hoàn thành để trả lời câu hỏi gốc.
 
         Args:
-            original_question: Câu hỏi gốc của người dùng.
+            question: Câu hỏi gốc của người dùng.
             completed_tasks: List các dictionary, mỗi dict là một task đã hoàn thành.
 
         Returns:
             Câu trả lời cuối cùng đã được tổng hợp.
         """
+        print("=" * 50 + " SYNTHESIZER " + "=" * 50)
+
         formatted_tasks = "Dưới đây là kết quả của các tác vụ con đã được thực hiện để trả lời câu hỏi:\n\n"
         for task in completed_tasks:
             formatted_tasks += f"--- START TASK ---\n"
@@ -77,9 +79,7 @@ class Synthesizer(BaseAgent):
 
         input_data = {
             "question": [
-                HumanMessage(
-                    content=f'Câu hỏi gốc cần trả lời là: "{original_question}"'
-                )
+                HumanMessage(content=f'Câu hỏi gốc cần trả lời là: "{question}"')
             ],
             "tasks_list": [HumanMessage(content=formatted_tasks)],
         }

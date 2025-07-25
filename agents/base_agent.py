@@ -7,8 +7,8 @@ from langchain.chat_models import init_chat_model
 class BaseAgent(ABC):
     def __init__(
         self,
-        model_name: str,
-        model_provider: str,
+        model_name: str = "gemini-2.0-flash",
+        model_provider: str = "google-genai",
         temperature: float = 0.0,
     ):
         """Base Framework for all agents

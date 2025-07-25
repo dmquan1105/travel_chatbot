@@ -54,6 +54,8 @@ class Planner(BaseAgent):
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
     def run(self, query: str, chat_history: List[BaseMessage]):
+        print("=" * 50 + " PLANNER " + "=" * 50)
+
         response = self.safe_invoke(
             {"question": [HumanMessage(content=query)], "chat_history": chat_history}
         )
