@@ -1,4 +1,4 @@
-from langchain_community.tools.tavily_search.tool import TavilySearchResults
+from langchain_tavily import TavilySearch
 from dotenv import load_dotenv
 from langchain.tools import tool
 from typing import List, Dict
@@ -20,8 +20,8 @@ def web_search(query: str) -> List[Dict[str, str]]:
     print("=" * 50)
     print("Using web search tool...")
     print("=" * 50)
-    search = TavilySearchResults()
-    results = search.run(query)
+    search = TavilySearch()
+    results = search.run(query)["results"]
 
     if not results:
         return []

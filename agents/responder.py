@@ -67,7 +67,7 @@ class Responder:
                 time.sleep(delay)
         raise Exception("Model vẫn quá tải sau nhiều lần thử lại.")
 
-    def run(self, query):
+    def run(self, query, depends_on_results=None):
         print("=" * 50 + " RESPONDER " + "=" * 50)
 
         required_keys = {"id", "description", "depends_on"}
@@ -80,7 +80,13 @@ class Responder:
         # Trích xuất câu hỏi cốt lõi
         user_request = query["description"]
 
-        response = self.safe_invoke({"question": [HumanMessage(content=user_request)]})
+        context = ""
+        if depends_on_results:
+            context = "\n".join([f"Task phụ thuộc: {r}" for r in depends_on_results])
+
+        response = self.safe_invoke(
+            {"question": [HumanMessage(content=context + "\n" + user_request)]}
+        )
 
         agent_text_response = response.get(
             "output", "Xin lỗi, đã có lỗi xảy ra và tôi không thể tạo phản hồi."

@@ -25,3 +25,9 @@ def search_travel_info(query: str, location: Optional[str] = None) -> str:
     storage = TravelVectorStorage()
     results = storage.search(query=query, location=location)
     return "\n\n".join([doc.page_content for doc in results])
+
+
+if __name__ == "__main__":
+    query = "DI tích lịch sử ở Hà Nội"
+    res = search_travel_info.invoke({"query": query, "location": "Hà Nội"})
+    print(res)

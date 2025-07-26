@@ -12,6 +12,12 @@ pip install -qU "langchain[google-genai]"
 pip install dotenv
 ```
 
+## Install langchain-huggingface:
+
+```sh
+pip install -U langchain-huggingface
+```
+
 ## Install FAISS (use with langchain):
 
 ```sh
@@ -45,5 +51,11 @@ Create a .env file and put your API key like the .env.example.
 - Install:
 
 ```sh
-pip install tavily-python
+pip install -U langchain-tavily
+```
+
+## Run preload_model code:
+
+```sh
+python -m scripts.preload_models
 ```

@@ -12,7 +12,7 @@ from langchain.schema import AIMessage, HumanMessage
 import json
 from langchain.schema import BaseMessage
 from typing import List
-
+from collections import defaultdict, deque
 
 # KHÔNG DÙNG TRONG PIPELINE
 
@@ -67,12 +67,59 @@ class Planner(BaseAgent):
                 result = result[len("```json") :].strip()
             if result.endswith("```"):
                 result = result[:-3].strip()
-            return json.loads(result)
+            tasks = json.loads(result)
+            sorted_tasks = self.topological_sort(tasks)
+            return sorted_tasks
         except Exception as e:
             print("Lỗi parse JSON:", e)
             return [
                 {"id": "task_1", "description": response["output"], "depends_on": []}
             ]
+
+    def topological_sort(self, tasks: List[dict]) -> List[dict]:
+        """
+        Sắp xếp các task theo thứ tự topo dựa vào trường depends_on.
+
+        Args:
+            tasks (List[dict]): Danh sách các task với trường depends_on.
+
+        Returns:
+            List[dict]: Danh sách các task đã được sắp xếp theo thứ tự topo.
+        """
+        # Xây dựng đồ thị phụ thuộc
+        graph = defaultdict(list)
+        in_degree = defaultdict(int)
+
+        for task in tasks:
+            task_id = task["id"]
+            depends_on = task["depends_on"]
+
+            for dependency in depends_on:
+                graph[dependency].append(task_id)
+                in_degree[task_id] += 1
+
+            if task_id not in in_degree:
+                in_degree[task_id] = 0
+
+        # Tìm các node không có phụ thuộc (in_degree = 0)
+        queue = deque([task["id"] for task in tasks if in_degree[task["id"]] == 0])
+        sorted_tasks = []
+        task_map = {task["id"]: task for task in tasks}
+
+        # Thực hiện sắp xếp topo
+        while queue:
+            current = queue.popleft()
+            sorted_tasks.append(task_map[current])
+
+            for neighbor in graph[current]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    queue.append(neighbor)
+
+        # Kiểm tra nếu có chu trình
+        if len(sorted_tasks) != len(tasks):
+            return tasks
+        return sorted_tasks
 
 
 def main():
