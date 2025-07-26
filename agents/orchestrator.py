@@ -139,7 +139,7 @@ class Orchestrator:
 
         final_answer = ""
 
-        for attempt in range(1):
+        for attempt in range(2):
             print(f"\n--- ATTENTION {attempt + 1} ---")
 
             print("[3] Responding to tasks...")
