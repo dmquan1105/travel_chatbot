@@ -1,7 +1,7 @@
-@startuml Travel bot
+@startuml TravelBot
 
 ' ===============================
-' Travel Vectorstore package
+' travel_vectorstore package
 ' ===============================
 package "travel_vectorstore" {
     class TravelVectorStorage {
@@ -14,11 +14,17 @@ package "travel_vectorstore" {
 }
 
 ' ===============================
-' Tools package
+' tools package
 ' ===============================
 package "tools" {
     class search_travel_info <<tool>> {
         + search_travel_info(query: str, location: Optional[str] = None): str
+    }
+    class get_weather <<tool>> {
+        + get_weather(location: str): str
+    }
+    class web_search <<tool>> {
+        + web_search(query: str): List[Dict[str, str]]
     }
 }
 
@@ -26,29 +32,51 @@ package "tools" {
 ' agents package
 ' ===============================
 package "agents" {
-    class Travel {
-        - llm_model
-        - max_tokens
-        - total_tokens
+    abstract class BaseAgent
+    class Orchestrator {
+        - rewriter: Rewriter
+        - planner: Planner
+        - responder: Responder
+        - synthesizer: Synthesizer
         - chat_history: List[BaseMessage]
-        - tools
-        - TravelExecutor
-        + update_total_tokens()
-        + trim_history_to_fit()
-        + safe_invoke(inputs, retries=5, delay=2)
         + run(question: str)
     }
-
+    class Planner {
+        + run(query: str, chat_history: List[BaseMessage])
+    }
+    class Rewriter {
+        + run(input: str, chat_history: list, max_iterations: int = 5): str
+    }
+    class Responder {
+        + run(query: dict, depends_on_results=None)
+    }
+    class Synthesizer {
+        + run(question: str, completed_tasks: list[dict]): str
+    }
 }
 
 ' ===============================
 ' Relationships
 ' ===============================
 
-' Composition: Travel includes tools
-Travel *-- search_travel_info : tool
+'Orchestrator sử dụng các agent thành phần
+Orchestrator --> Responder
+Orchestrator --> Planner
+Orchestrator --> Rewriter
+Orchestrator --> Synthesizer
 
-' Dependency: search_travel_info uses TravelVectorStorage
+'Responder sử dụng các tool
+Responder ..down..> search_travel_info : uses
+Responder ..down..> get_weather : uses
+Responder ..down..> web_search : uses
+
+'search_travel_info sử dụng TravelVectorStorage
 search_travel_info ..> TravelVectorStorage : uses
+
+' Các agent kế thừa BaseAgent
+Planner --|> BaseAgent
+Responder --|> BaseAgent
+Rewriter --|> BaseAgent
+Synthesizer --|> BaseAgent
 
 @enduml
