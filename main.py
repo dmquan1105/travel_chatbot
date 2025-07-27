@@ -15,8 +15,9 @@ def main():
         response = travel_agent.run(question=user_input)
         print(f"Bot: {response}\n")
 
-        print(f"Tokens: {travel_agent.total_tokens}")
-        print("-" * 50)
+        # Manual memory management:
+        # print(f"Tokens: {travel_agent.total_tokens}")
+        # print("-" * 50)
 
 
 if __name__ == "__main__":

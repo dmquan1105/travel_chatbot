@@ -19,6 +19,8 @@ from agents.rewriter import Rewriter
 from agents.response_synthesizer import Synthesizer
 from prompt import ORCHESTRATOR_PROMPT
 
+from langchain.memory import ConversationSummaryBufferMemory
+
 
 class ValidationResult(BaseModel):
     """Schema để đánh giá câu trả lời."""
@@ -57,9 +59,19 @@ class Orchestrator:
 
         self.validation_chain = validation_prompt | structured_llm
 
-        self.max_tokens = max_tokens
-        self.total_tokens = 0
-        self.chat_history: List[BaseMessage] = []
+        # Manual managing memory
+        # self.max_tokens = max_tokens
+        # self.total_tokens = 0
+        # self.chat_history: List[BaseMessage] = []
+
+        # Manage memory by summarizing...
+        self.memory = ConversationSummaryBufferMemory(
+            llm=self.llm_model,
+            max_token_limit=max_tokens,
+            return_messages=True,
+            memory_key="chat_history",
+            input_key="input",
+        )
 
         self.rewriter = Rewriter(
             model_name=model_name,
@@ -124,18 +136,36 @@ class Orchestrator:
         """Execute the agent"""
         print("=" * 50 + " ORCHESTRATOR " + "=" * 50)
 
-        self.chat_history.append(HumanMessage(content=question))
-        self.update_total_tokens()
-        self.trim_history_to_fit()
+        # Manual managing memory
+        # self.chat_history.append(HumanMessage(content=question))
+        # self.update_total_tokens()
+        # self.trim_history_to_fit()
+
+        # Manage memory by summarizing...
+        chat_history = self.memory.chat_memory.messages
+        print(f"\nCurrent History ({len(chat_history)} messages):")
+        print(get_buffer_string(chat_history))
+        # =====
 
         print("\n[1] Rewriting question...")
         rewrite_question = self.rewriter.run(
-            input=question, chat_history=self.chat_history
+            # Manual:
+            # input=question, chat_history=self.chat_history
+            # =====
+            # Summarizing:
+            input=question,
+            chat_history=chat_history,
+            # =====
         )
         print(f"  -> Rewritten: {rewrite_question}")
 
         print("\n[2] Planning tasks...")
-        tasks = self.planner.run(query=rewrite_question, chat_history=self.chat_history)
+        # Manual:
+        # tasks = self.planner.run(query=rewrite_question, chat_history=self.chat_history)
+        # =====
+        # Summarizing:
+        tasks = self.planner.run(query=rewrite_question, chat_history=chat_history)
+        # =====
         print(f"  -> Plan: {tasks}")
 
         final_answer = ""
@@ -171,8 +201,13 @@ class Orchestrator:
 
             if validation_result and validation_result.is_sufficient == "yes":
                 print("\n[SUCCESS] Answer is sufficient.")
-                ai_msg = AIMessage(content=final_answer)
-                self.chat_history.append(ai_msg)
+                # Manual:
+                # ai_msg = AIMessage(content=final_answer)
+                # self.chat_history.append(ai_msg)
+                # =====
+                # Summarizing:
+                self.memory.save_context({"input": question}, {"output": final_answer})
+                # =====
                 return final_answer
             else:
                 feedback = (
