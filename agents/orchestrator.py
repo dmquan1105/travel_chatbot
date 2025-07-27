@@ -238,9 +238,15 @@ class Orchestrator:
         print(
             f"\n[FAILURE] Không thể tạo ra câu trả lời đủ tốt sau {attempt+1} lần thử. Trả lại kết quả cuối cùng."
         )
-        ai_msg = AIMessage(content=final_answer)
-        self.chat_history.append(ai_msg)
-        self.update_total_tokens()
+
+        # Manual:
+        # ai_msg = AIMessage(content=final_answer)
+        # self.chat_history.append(ai_msg)
+        # self.update_total_tokens()
+        # =====
+        # Summarizing:
+        self.memory.save_context({"input": question}, {"output": final_answer})
+        # =====
         return final_answer
 
 
