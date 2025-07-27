@@ -58,6 +58,7 @@ class Orchestrator:
         self.validation_chain = validation_prompt | structured_llm
 
         self.max_tokens = max_tokens
+        self.total_tokens = 0
         self.chat_history: List[BaseMessage] = []
 
         self.rewriter = Rewriter(
@@ -139,7 +140,7 @@ class Orchestrator:
 
         final_answer = ""
 
-        for attempt in range(2):
+        for attempt in range(3):
             print(f"\n--- ATTENTION {attempt + 1} ---")
 
             print("[3] Responding to tasks...")
@@ -172,7 +173,6 @@ class Orchestrator:
                 print("\n[SUCCESS] Answer is sufficient.")
                 ai_msg = AIMessage(content=final_answer)
                 self.chat_history.append(ai_msg)
-                self.update_total_tokens()
                 return final_answer
             else:
                 feedback = (
