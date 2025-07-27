@@ -225,7 +225,13 @@ class Orchestrator:
 
     Dựa trên phản hồi này, hãy tạo ra một kế hoạch MỚI và TỐT HƠN. Tránh những sai lầm của kế hoạch trước. Kế hoạch của bạn phải giải quyết được những thiếu sót đã được chỉ ra trong phần phản hồi."""
                     tasks = self.planner.run(
-                        query=replan_prompt, chat_history=self.chat_history
+                        # Manual:
+                        # query=replan_prompt, chat_history=self.chat_history
+                        # =====
+                        # Summarizing:
+                        query=replan_prompt,
+                        chat_history=chat_history,
+                        # =====
                     )
                     print(f"  -> New Plan: {tasks}")
 
