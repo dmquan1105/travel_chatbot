@@ -1,32 +1,68 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from agents.travel_bot import Travel
+from typing import List, Dict, Optional
+import uuid
 
-# Khởi tạo Flask app
-app = Flask(__name__)
-CORS(app)  # Cho phép gọi từ React (localhost:3000)
+app = FastAPI()
 
-# Khởi tạo agent du lịch (chỉ tạo 1 lần khi server khởi động)
+# Cho phép truy cập từ frontend (port 5173 của Vite)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Bộ nhớ tạm cho session trò chuyện
+user_sessions: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
+
+# Khởi tạo agent
 travel_agent = Travel("gemini-2.0-flash", "google-genai", temperature=0)
 
-# Route xử lý yêu cầu từ React
-@app.route("/chat", methods=["POST"])
-def chat():
-    try:
-        data = request.get_json()
-        user_message = data.get("message", "")
+# ------------------ Models ------------------ #
+class ChatRequest(BaseModel):
+    user_id: str
+    conversation_id: str
+    message: str
 
-        if not user_message.strip():
-            return jsonify({"reply": "Bạn chưa nhập gì cả!"})
+class NewConversationRequest(BaseModel):
+    user_id: str
 
-        response = travel_agent.run(question=user_message)
-        reply = response["output"]
+class DeleteConversationRequest(BaseModel):
+    user_id: str
+    conversation_id: str
 
-        return jsonify({"reply": reply})
+# ------------------ API ------------------ #
+@app.post("/chat")
+def chat(req: ChatRequest):
+    # Gọi agent xử lý câu hỏi
+    result = travel_agent.run(question=req.message)
+    bot_reply = result["output"]
 
-    except Exception as e:
-        return jsonify({"reply": f"Đã xảy ra lỗi: {str(e)}"}), 500
+    # Lưu lịch sử
+    user_sessions.setdefault(req.user_id, {}).setdefault(req.conversation_id, []).append({
+        "user_message": req.message,
+        "bot_response": bot_reply
+    })
 
-# Chạy server Flask
-if __name__ == "__main__":
-    app.run(debug=True)
+    return [{"text": bot_reply}]
+
+@app.post("/new_conversation")
+def new_conversation(req: NewConversationRequest):
+    new_id = str(uuid.uuid4())
+    user_sessions.setdefault(req.user_id, {})[new_id] = []
+    return {"conversation_id": new_id}
+
+@app.get("/history")
+def get_history(user_id: str, conversation_id: str):
+    history = user_sessions.get(user_id, {}).get(conversation_id, [])
+    return history
+
+@app.delete("/conversation")
+def delete_conversation(req: DeleteConversationRequest):
+    if req.user_id in user_sessions:
+        user_sessions[req.user_id].pop(req.conversation_id, None)
+    return {"status": "deleted"}
