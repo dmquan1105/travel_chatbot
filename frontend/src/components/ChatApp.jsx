@@ -7,6 +7,8 @@ const ChatApp = () => {
   const [conversations, setConversations] = useState([]);
   const [selectedChatIndex, setSelectedChatIndex] = useState(0);
   const [chats, setChats] = useState([]);
+  const [isWaiting, setIsWaiting] = useState(false);
+
 
   // Lấy danh sách tất cả cuộc hội thoại và lịch sử của cuộc hội thoại được chọn
   useEffect(() => {
@@ -57,6 +59,7 @@ const ChatApp = () => {
     // Cập nhật trạng thái ngay lập tức với tin nhắn người dùng
     const updatedChats = [...chats, { user: message }];
     setChats(updatedChats);
+    setIsWaiting(true);
 
     try {
       const response = await axios.post(
@@ -77,6 +80,8 @@ const ChatApp = () => {
       setChats((prevChats) => [...prevChats, { bot: botResponse }]);
     } catch (error) {
       console.error("Error sending message:", error);
+    } finally {
+      setIsWaiting(false);
     }
   };
 
@@ -150,6 +155,7 @@ const ChatApp = () => {
         chat={chats}
         onSendMessage={handleSendMessage}
         conversationId={conversations[selectedChatIndex]?.conversation_id}
+        isWaiting={isWaiting}
       />
     </div>
   );

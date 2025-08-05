@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
-const ChatWindow = ({ chat = [], onSendMessage, conversationId }) => {
+const ChatWindow = ({ chat = [], onSendMessage, conversationId, isWaiting }) => {
   const [message, setMessage] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -29,7 +29,7 @@ const ChatWindow = ({ chat = [], onSendMessage, conversationId }) => {
 
   return (
     <div className="chat-window flex flex-col flex-1 p-4">
-      <div className="messages flex-grow mb-4 overflow-y-auto">
+      <div className="messages flex-grow mb-4 overflow-y-auto scrollbar-hide">
         {chat.length === 0 ? (
           <div className="text-center text-gray-200 font-bold">
             What can I help with?
@@ -57,6 +57,18 @@ const ChatWindow = ({ chat = [], onSendMessage, conversationId }) => {
               </div>
             </div>
           ))
+        )}
+
+        {/* Hiển thị trạng thái đang đợi */}
+        {isWaiting && (
+          <div className="py-2">
+            <div className="bot-message text-left">
+              <strong className="text-purple-300">Bot:</strong>
+              <div className="prose prose-invert max-w-none italic text-gray-400">
+                ⏳ Waiting for response...
+              </div>
+            </div>
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
