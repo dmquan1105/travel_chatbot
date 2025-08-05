@@ -8,12 +8,12 @@ const ChatWindow = ({ chat = [], onSendMessage, conversationId }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!conversationId) {
-      console.error("Conversation ID is missing!");
+      console.error("Conversation ID is missing! Cannot send message.");
       return;
     }
     if (message.trim()) {
       onSendMessage(message);
-      setMessage(""); // Clear the input after sending
+      setMessage("");
     }
   };
 
@@ -25,7 +25,7 @@ const ChatWindow = ({ chat = [], onSendMessage, conversationId }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [chat, message]);
+  }, [chat]);
 
   return (
     <div className="chat-window flex flex-col flex-1 p-4">

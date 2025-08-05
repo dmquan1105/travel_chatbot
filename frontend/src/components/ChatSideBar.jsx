@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaTrash, FaBars, FaTimes } from "react-icons/fa";
 
 const ChatSideBar = ({
-  chats,
+  conversations,
   selectChat,
   deleteConversation,
   startNewConversation,
@@ -29,12 +29,12 @@ const ChatSideBar = ({
       >
         <h2 className="text-xl mb-4">ChattyBot</h2>
         <ul>
-          {chats.length === 0 ? (
+          {conversations.length === 0 ? (
             <li>No conversations yet</li>
           ) : (
-            chats.map((chat, index) => (
+            conversations.map((conv, index) => (
               <li
-                key={index}
+                key={conv.conversation_id}
                 onClick={() => selectChat(index)}
                 className={`cursor-pointer mb-2 p-2 hover:bg-[#6b7069] flex justify-between items-center ${
                   selectedChatIndex === index ? "bg-[#697565]" : ""
@@ -43,7 +43,7 @@ const ChatSideBar = ({
                 <div className="flex-1">Conversation {index + 1}</div>
                 <button
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevent the click event from bubbling up to the parent div
+                    e.stopPropagation();
                     if (
                       window.confirm(
                         "Are you sure you want to delete this conversation?"

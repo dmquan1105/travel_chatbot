@@ -4,73 +4,65 @@ import ChatSideBar from "./ChatSideBar";
 import ChatWindow from "./ChatWindow";
 
 const ChatApp = () => {
-  const [chats, setChats] = useState(() => {
-    const storedChats = localStorage.getItem("chats");
-    return storedChats ? JSON.parse(storedChats) : [];
-  });
-  const [selectedChatIndex, setSelectedChatIndex] = useState(() => {
-    const storedIndex = localStorage.getItem("selectedChatIndex");
-    return storedIndex ? parseInt(storedIndex, 10) : 0;
-  });
-  const [conversations, setConversations] = useState(() => {
-    const storedConversations = localStorage.getItem("conversations");
-    return storedConversations ? JSON.parse(storedConversations) : [];
-  });
-  const userId = "user124"; // Replace with actual user ID logic
+  const [conversations, setConversations] = useState([]);
+  const [selectedChatIndex, setSelectedChatIndex] = useState(0);
+  const [chats, setChats] = useState([]);
 
+  // Lấy danh sách tất cả cuộc hội thoại và lịch sử của cuộc hội thoại được chọn
   useEffect(() => {
-    const fetchChatHistory = async () => {
+    const fetchData = async () => {
       try {
-        const currentConversationId =
-          conversations[selectedChatIndex]?.conversationId;
-        if (currentConversationId) {
-          const response = await axios.get(
-            `http://localhost:5001/history?user_id=${userId}&conversation_id=${currentConversationId}`
-          );
-          const data = response.data;
+        // Lấy danh sách tất cả cuộc hội thoại
+        const conversationsResponse = await axios.get(
+          "http://localhost:5001/all_conversations"
+        );
+        const allConversations = conversationsResponse.data;
 
-          const formattedData = data.map((chat) => ({
-            user: chat.user_message,
-            bot: chat.bot_response,
+        if (allConversations.length > 0) {
+          setConversations(allConversations);
+
+          // Nếu có cuộc hội thoại, lấy lịch sử chat của cuộc hội thoại được chọn
+          const currentConversation = allConversations[selectedChatIndex];
+          const historyResponse = await axios.get(
+            `http://localhost:5001/history?conversation_id=${currentConversation.conversation_id}`
+          );
+          const historyData = historyResponse.data;
+
+          const formattedHistory = historyData.map((chat) => ({
+            user: chat.input,
+            bot: chat.output,
           }));
 
-          const updatedChats = [...chats];
-          updatedChats[selectedChatIndex] = formattedData;
-          setChats(updatedChats);
-          localStorage.setItem("chats", JSON.stringify(updatedChats)); // Store chats in localStorage
+          setChats(formattedHistory);
+        } else {
+          // Nếu không có cuộc hội thoại nào, khởi tạo một cuộc hội thoại mới
+          startNewConversation();
         }
       } catch (error) {
-        console.error("Error fetching chat history:", error);
+        console.error("Error fetching data:", error);
       }
     };
-
-    fetchChatHistory();
-  }, [userId, conversations, selectedChatIndex]);
+    fetchData();
+  }, [selectedChatIndex]); // Lắng nghe thay đổi của index để tải lịch sử chat mới
 
   const handleSendMessage = async (message) => {
-    const updatedChats = [...chats];
-
-    if (!updatedChats[selectedChatIndex]) {
-      updatedChats[selectedChatIndex] = [];
-    }
-    updatedChats[selectedChatIndex].push({ user: message });
-    setChats([...updatedChats]);
-    localStorage.setItem("chats", JSON.stringify(updatedChats)); // Store chats in localStorage
-
     const currentConversationId =
-      conversations[selectedChatIndex]?.conversationId;
+      conversations[selectedChatIndex]?.conversation_id;
 
     if (!currentConversationId) {
       console.error("Conversation ID is missing!");
       return;
     }
 
+    // Cập nhật trạng thái ngay lập tức với tin nhắn người dùng
+    const updatedChats = [...chats, { user: message }];
+    setChats(updatedChats);
+
     try {
       const response = await axios.post(
         "http://localhost:5001/chat",
         {
           message: message,
-          user_id: userId,
           conversation_id: currentConversationId,
         },
         {
@@ -80,11 +72,9 @@ const ChatApp = () => {
         }
       );
 
-      const botResponse = response.data[0]?.text || "No response";
-      console.log("Bot response:", botResponse);
-      updatedChats[selectedChatIndex].push({ bot: botResponse });
-      setChats([...updatedChats]);
-      localStorage.setItem("chats", JSON.stringify(updatedChats)); // Store chats in localStorage
+      const botResponse = response.data.text || "No response";
+      // Cập nhật trạng thái với phản hồi của bot
+      setChats((prevChats) => [...prevChats, { bot: botResponse }]);
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -92,33 +82,27 @@ const ChatApp = () => {
 
   const startNewConversation = async () => {
     try {
-      const response = await axios.post(
-        "http://localhost:5001/new_conversation",
-        {
-          user_id: userId,
-        }
+      // Sửa đổi: Không gửi request body
+      const response = await axios.get(
+        "http://localhost:5001/new_conversation"
       );
-      const newConversationId = response.data.conversation_id; // Save the conversation ID
-      const newConversations = [
-        ...conversations,
-        { conversationId: newConversationId },
-      ];
-      setConversations(newConversations); // Update the conversations state
-      localStorage.setItem("conversations", JSON.stringify(newConversations)); // Store conversations in localStorage
-      const newChats = [...chats, []]; // Add a new empty chat array
-      setChats(newChats);
-      localStorage.setItem("chats", JSON.stringify(newChats)); // Store chats in localStorage
-      const newIndex = newConversations.length - 1;
-      setSelectedChatIndex(newIndex); // Select the new conversation
-      localStorage.setItem("selectedChatIndex", newIndex); // Store selectedChatIndex in localStorage
-      console.log("New conversation started:", newConversationId);
+      const newConversation = {
+        conversation_id: response.data.conversation_id,
+      };
+
+      setConversations((prevConversations) => [
+        newConversation,
+        ...prevConversations,
+      ]);
+      setSelectedChatIndex(0);
+      setChats([]);
     } catch (error) {
       console.error("Error starting a new conversation:", error);
     }
   };
 
   const deleteConversation = async (index) => {
-    const conversationId = conversations[index]?.conversationId;
+    const conversationId = conversations[index]?.conversation_id;
 
     if (!conversationId) {
       console.error("Conversation ID is missing!");
@@ -128,23 +112,21 @@ const ChatApp = () => {
     try {
       await axios.delete(`http://localhost:5001/conversation`, {
         data: {
-          user_id: userId,
           conversation_id: conversationId,
         },
       });
 
       const newConversations = conversations.filter((_, i) => i !== index);
-      const newChats = chats.filter((_, i) => i !== index);
-
       setConversations(newConversations);
-      setChats(newChats);
 
-      localStorage.setItem("conversations", JSON.stringify(newConversations));
-      localStorage.setItem("chats", JSON.stringify(newChats));
-
-      if (selectedChatIndex >= newConversations.length) {
-        setSelectedChatIndex(newConversations.length - 1);
-        localStorage.setItem("selectedChatIndex", newConversations.length - 1);
+      if (newConversations.length === 0) {
+        startNewConversation();
+      } else {
+        const newIndex =
+          index === 0
+            ? 0
+            : Math.min(selectedChatIndex, newConversations.length - 1);
+        setSelectedChatIndex(newIndex);
       }
     } catch (error) {
       console.error("Error deleting conversation:", error);
@@ -153,22 +135,21 @@ const ChatApp = () => {
 
   const selectChat = (index) => {
     setSelectedChatIndex(index);
-    localStorage.setItem("selectedChatIndex", index); // Store selectedChatIndex in localStorage
   };
 
   return (
     <div className="chat-app h-screen flex text-gray-100">
       <ChatSideBar
-        chats={chats}
+        conversations={conversations}
         selectChat={selectChat}
         startNewConversation={startNewConversation}
         deleteConversation={deleteConversation}
         selectedChatIndex={selectedChatIndex}
       />
       <ChatWindow
-        chat={chats[selectedChatIndex] || []}
+        chat={chats}
         onSendMessage={handleSendMessage}
-        conversationId={conversations[selectedChatIndex]?.conversationId}
+        conversationId={conversations[selectedChatIndex]?.conversation_id}
       />
     </div>
   );

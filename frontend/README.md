@@ -8,3 +8,4 @@
 
 - python test.py
 - uvicorn test:app --reload --port 5001
+- uvicorn server:app --reload --port 5001

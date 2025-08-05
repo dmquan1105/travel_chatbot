@@ -59,3 +59,17 @@ pip install -U langchain-tavily
 ```sh
 python -m scripts.preload_models
 ```
+
+# -------RUN PROJECT-----------
+
+# 1. Run frontend
+
+- cd frontend
+- npm install
+- npm run dev
+
+# 2. Run backend
+
+- cd backend
+- uvicorn server:app --reload --port 5001
+
