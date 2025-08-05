@@ -25,8 +25,23 @@ app.add_middleware(
 )
 
 # Khởi tạo agent
-travel_agent = Orchestrator("gemini-2.0-flash", "google-genai", temperature=0)
+# travel_agent = Orchestrator("gemini-2.0-flash", "google-genai", temperature=0)
 # travel_agent = Travel("gemini-2.0-flash", "google-genai", temperature=0)   # test bằng Travel agent
+
+# -- Agent Managment --
+active_agent = {}
+def create_agent(conversation_id: str):
+    agent = Orchestrator("gemini-2.0-flash", "google-genai", temperature=0)
+    chat_history = get_messages(conversation_id)
+    for p in chat_history:
+        agent.memory.save_context({"input": p["input"]}, {"output": p["output"]})
+    active_agent[conversation_id] = agent
+    print(f"Your {conversation_id} agent has been created successfully.")
+    return agent
+
+def delete_agent(conversation_id: str):
+    if conversation_id in active_agent:
+        del active_agent[conversation_id]
 
 # --------- Request Models ---------
 class ChatRequest(BaseModel):
@@ -46,12 +61,15 @@ def new_conversation():
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    result = travel_agent.run(question=req.message)
+    if req.conversation_id not in active_agent:
+        create_agent(req.conversation_id)
+    agent = active_agent[req.conversation_id]
+    print(f"Your {req.conversation_id} agent is ready.")
+    result = agent.run(question=req.message)
     # bot_reply = result["output"] # Nếu dùng Travel agent, cần truy cập "output"
     bot_reply = result  # Nếu dùng Orchest, không cần truy cập "output"
 
     add_message(req.conversation_id, req.message, bot_reply)
-
     return {"text": bot_reply}
 
 @app.get("/history")
@@ -86,4 +104,5 @@ def get_conversations():
 def delete_conv(req: DeleteConversationRequest):
     delete_conversation(req.conversation_id)
     delete_messages(req.conversation_id)
+    delete_agent(req.conversation_id)
     return {"status": "deleted"}
