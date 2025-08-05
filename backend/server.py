@@ -25,8 +25,8 @@ app.add_middleware(
 )
 
 # Khởi tạo agent
-# travel_agent = Orchestrator("gemini-2.0-flash", "google-genai", temperature=0)
-travel_agent = Travel("gemini-2.0-flash", "google-genai", temperature=0)   # test bằng Travel agent
+travel_agent = Orchestrator("gemini-2.0-flash", "google-genai", temperature=0)
+# travel_agent = Travel("gemini-2.0-flash", "google-genai", temperature=0)   # test bằng Travel agent
 
 # --------- Request Models ---------
 class ChatRequest(BaseModel):
@@ -47,7 +47,8 @@ def new_conversation():
 @app.post("/chat")
 def chat(req: ChatRequest):
     result = travel_agent.run(question=req.message)
-    bot_reply = result["output"]
+    # bot_reply = result["output"] # Nếu dùng Travel agent, cần truy cập "output"
+    bot_reply = result  # Nếu dùng Orchest, không cần truy cập "output"
 
     add_message(req.conversation_id, req.message, bot_reply)
 
