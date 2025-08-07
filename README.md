@@ -1,75 +1,108 @@
-# travel_chatbot
+# Travel Chatbot
 
-## To install langchain:
+Một chatbot du lịch thông minh sử dụng LangChain và Gemini AI để cung cấp thông tin du lịch, thời tiết và lên kế hoạch cho chuyến đi.
 
-```sh
-pip install -qU "langchain[google-genai]"
+## Tính năng
+
+- **Tìm kiếm thông tin du lịch**: Tìm kiếm địa điểm, ẩm thực, lịch sử từ cơ sở dữ liệu.
+- **Thông tin thời tiết**: Lấy thông tin thời tiết real-time.
+- **Tìm kiếm web**: Tìm kiếm thông tin mới nhất từ internet.
+- **Lập kế hoạch du lịch**: Tự động lên kế hoạch chi tiết cho chuyến đi.
+- **Giao diện web**: Frontend hiện đại với React.
+
+## Yêu cầu hệ thống
+
+- Python 3.8+
+- Node.js 16+ (cho frontend)
+- RAM: tối thiểu 4GB (khuyến nghị 8GB)
+
+## Cài đặt
+
+### 1. Clone repository
+
+```bash
+git clone https://github.com/dmquan1105/travel_chatbot.git
+cd travel_chatbot
 ```
 
-## Install dotenv:
+### 2. Tạo virtual environment
 
-```sh
-pip install dotenv
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# hoặc
+venv\Scripts\activate  # Windows
 ```
 
-## Install langchain-huggingface:
+### 3. Cài dependencies
 
-```sh
-pip install -U langchain-huggingface
-```
-
-## Install FAISS (use with langchain):
-
-```sh
-pip install langchain-community faiss-cpu
-```
-
-If you have a GPU, replace faiss-cpu with faiss-gpu.
-
-## Install all current package:
-
-```sh
+```bash
 pip install -r requirements.txt
-
 ```
 
-## Setup environment:
+### 4. Cấu hình environment variables
 
-Create a .env file and put your API key like the .env.example.
+Tạo file .env dựa trên .env.example:
 
-## Open Weather API Key:
-
-- Sign up and create account:
-  https://www.weatherapi.com/
-- Get API key in the API tab.
-- Config WEATHERAPI_KEY in .env file.
-
-## Tavily:
-
-- Get API Key: https://app.tavily.com
-
-- Install:
-
-```sh
-pip install -U langchain-tavily
+```bash
+cp .env.example .env
 ```
 
-## Run preload_model code:
+Điền các API cần thiết:
 
-```sh
+```bash
+# Google Gemini API
+GOOGLE_API_KEY=<your_gemini_api_key>
+
+# Weather API
+WEATHERAPI_KEY=<your_weather_api_key>
+
+# Tavily Search API
+TAVILY_API_KEY=<your_tavily_api_key>
+
+# Tạo database ở Mongodb atlas
+MONGO_URI=<your_mongo_url>
+```
+
+### 5. Preload models
+
+```bash
 python -m scripts.preload_models
 ```
 
-# -------RUN PROJECT-----------
+## API Keys
 
-# 1. Run frontend
+### Google Gemini API
 
-- cd frontend
-- npm install
-- npm run dev
+Truy cập Google AI Studio
+Tạo API key
+Thêm vào file .env
 
-# 2. Run backend
+### Weather API
 
-- cd backend
-- uvicorn server:app --reload --port 5001
+Đăng ký tại WeatherAPI.com
+Lấy API key từ tab API
+Thêm WEATHERAPI_KEY vào .env
 
+### Tavily Search API
+
+Đăng ký tại Tavily
+Lấy API key
+Thêm TAVILY_API_KEY vào .env
+
+## Chạy ứng dụng
+
+### 1. Run frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 2. Run backend
+
+```bash
+cd backend
+uvicorn server:app --reload --port 5001
+```
