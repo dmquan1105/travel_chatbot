@@ -42,7 +42,7 @@ pip install -r requirements.txt
 
 ### 4. Cấu hình environment variables
 
-Tạo file .env dựa trên .env.example:
+Tạo file `.env` dựa trên `.env.example`:
 
 ```bash
 cp .env.example .env
@@ -76,19 +76,19 @@ python -m scripts.preload_models
 
 Truy cập Google AI Studio
 Tạo API key
-Thêm vào file .env
+Thêm vào file `.env`
 
 ### Weather API
 
 Đăng ký tại WeatherAPI.com
 Lấy API key từ tab API
-Thêm WEATHERAPI_KEY vào .env
+Thêm WEATHERAPI_KEY vào `.env`
 
 ### Tavily Search API
 
 Đăng ký tại Tavily
 Lấy API key
-Thêm TAVILY_API_KEY vào .env
+Thêm TAVILY_API_KEY vào `.env`
 
 ## Chạy ứng dụng
 
